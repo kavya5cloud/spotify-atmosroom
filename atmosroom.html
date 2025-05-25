@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spotify AtmosRoom</title>
+  <style>
+    /* Cyberpunk purple base */
+    :root {
+      --purple-dark: #1a0033;
+      --purple-mid: #4d0099;
+      --purple-neon: #cc00ff;
+      --purple-light: #e6b3ff;
+      --grid-color: rgba(204, 0, 255, 0.15);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Courier New', monospace;
+    }
+
+    body {
+      min-height: 100vh;
+      background: var(--purple-dark);
+      color: white;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Grid background */
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: 
+        linear-gradient(var(--grid-color) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+      background-size: 40px 40px;
+      z-index: -2;
+    }
+
+    /* Animated scanlines */
+    body::after {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: 
+        repeating-linear-gradient(
+          to bottom,
+          transparent 0%,
+          rgba(204, 0, 255, 0.05) 1px,
+          transparent 2px
+        );
+      animation: scanline 6s linear infinite;
+      z-index: -1;
+    }
+
+    @keyframes scanline {
+      0% { transform: translateY(-100%); }
+      100% { transform: translateY(100%); }
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+      position: relative;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 3rem;
+      position: relative;
+    }
+
+    h1 {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      color: var(--purple-neon);
+      text-shadow: 0 0 10px var(--purple-neon);
+      letter-spacing: 2px;
+    }
+
+    p.subtitle {
+      font-size: 1.2rem;
+      opacity: 0.8;
+      color: var(--purple-light);
+    }
+
+    /* Story timeline */
+    .story-timeline {
+      display: flex;
+      justify-content: center;
+      margin: 2rem 0;
+      position: relative;
+    }
+
+    .timeline-node {
+      width: 12px;
+      height: 12px;
+      background: var(--purple-mid);
+      border-radius: 50%;
+      margin: 0 15px;
+      position: relative;
+      cursor: pointer;
+      transition: all 0.3s;
+      border: 2px solid transparent;
+    }
+
+    .timeline-node.active {
+      background: var(--purple-neon);
+      box-shadow: 0 0 15px var(--purple-neon);
+      transform: scale(1.3);
+    }
+
+    .timeline-node::after {
+      content: attr(data-weather);
+      position: absolute;
+      top: -30px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.8rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .timeline-node:hover::after {
+      opacity: 1;
+    }
+
+    /* Weather selector */
+    .weather-selector {
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      margin: 2rem 0;
+    }
+
+    .weather-btn {
+      padding: 1rem 2rem;
+      border: none;
+      border-radius: 0;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+      background: rgba(77, 0, 153, 0.3);
+      color: var(--purple-light);
+      border: 1px solid var(--purple-neon);
+      clip-path: polygon(
+        0 0,
+        100% 0,
+        100% calc(100% - 10px),
+        calc(100% - 10px) 100%,
+        0 100%
+      );
+      position: relative;
+      overflow: hidden;
+    }
+
+    .weather-btn::before {
+      content: "";
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(
+        to bottom right,
+        transparent 45%,
+        var(--purple-neon) 50%,
+        transparent 55%
+      );
+      transform: rotate(45deg);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .weather-btn:hover {
+      background: rgba(204, 0, 255, 0.2);
+      transform: translateY(-3px);
+    }
+
+    .weather-btn:hover::before {
+      opacity: 0.6;
+      animation: shine 1.5s infinite;
+    }
+
+    @keyframes shine {
+      0% { transform: rotate(45deg) translateX(-100%); }
+      100% { transform: rotate(45deg) translateX(100%); }
+    }
+
+    /* AtmosRoom display */
+    .atmos-room {
+      background: rgba(26, 0, 51, 0.7);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--purple-neon);
+      box-shadow: 0 0 30px rgba(204, 0, 255, 0.3);
+      padding: 2rem;
+      margin-top: 2rem;
+      position: relative;
+      min-height: 400px;
+    }
+
+    .weather-display {
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+
+    .weather-icon {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+      text-shadow: 0 0 20px currentColor;
+    }
+
+    .weather-desc {
+      font-size: 1.8rem;
+      margin-bottom: 0.5rem;
+      color: var(--purple-neon);
+    }
+
+    .location {
+      opacity: 0.8;
+      font-size: 1rem;
+      color: var(--purple-light);
+    }
+
+    /* Spotify player */
+    .spotify-player {
+      margin-top: 2rem;
+    }
+
+    iframe {
+      border: 1px solid var(--purple-neon);
+      box-shadow: 0 0 20px rgba(204, 0, 255, 0.5);
+      width: 100%;
+    }
+
+    /* Dynamic background particles */
+    .particles {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .particle {
+      position: absolute;
+      background: var(--purple-neon);
+      border-radius: 50%;
+      opacity: 0.6;
+    }
+
+    /* Loading animation */
+    .loading-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--purple-dark);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      transition: opacity 1s;
+    }
+
+    .loading-text {
+      font-size: 1.5rem;
+      margin-top: 2rem;
+      color: var(--purple-light);
+      text-align: center;
+    }
+
+    .loading-bar {
+      width: 300px;
+      height: 4px;
+      background: rgba(204, 0, 255, 0.2);
+      margin-top: 1rem;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .loading-progress {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 0%;
+      background: var(--purple-neon);
+      box-shadow: 0 0 10px var(--purple-neon);
+      animation: loading 3s forwards;
+    }
+
+    @keyframes loading {
+      0% { width: 0%; }
+      100% { width: 100%; }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 2rem;
+      }
+      .weather-btn {
+        padding: 0.8rem 1.2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Loading screen -->
+  <div class="loading-screen" id="loading-screen">
+    <div style="font-size: 3rem; color: var(--purple-neon);">🌀</div>
+    <div class="loading-text">INITIALIZING ATMOSROOM...</div>
+    <div class="loading-bar">
+      <div class="loading-progress"></div>
+    </div>
+  </div>
+
+  <div class="container">
+    <header>
+      <h1>SPOTIFY ATMOSROOM</h1>
+      <p class="subtitle">SYNCING WEATHER WITH SOUND</p>
+    </header>
+
+    <!-- Story timeline -->
+    <div class="story-timeline">
+      <div class="timeline-node active" data-weather="SUNNY" onclick="setWeather('sunny')"></div>
+      <div class="timeline-node" data-weather="RAINY" onclick="setWeather('rainy')"></div>
+      <div class="timeline-node" data-weather="CLOUDY" onclick="setWeather('cloudy')"></div>
+      <div class="timeline-node" data-weather="SNOWY" onclick="setWeather('snowy')"></div>
+    </div>
+
+    <!-- Weather selector -->
+    <div class="weather-selector">
+      <button class="weather-btn" onclick="setWeather('sunny')">
+        <span>☀️</span> SUNNY
+      </button>
+      <button class="weather-btn" onclick="setWeather('rainy')">
+        <span>🌧️</span> RAINY
+      </button>
+      <button class="weather-btn" onclick="setWeather('cloudy')">
+        <span>☁️</span> CLOUDY
+      </button>
+      <button class="weather-btn" onclick="setWeather('snowy')">
+        <span>❄️</span> SNOWY
+      </button>
+    </div>
+
+    <!-- AtmosRoom display -->
+    <div class="atmos-room">
+      <div class="weather-display">
+        <div class="weather-icon" id="weather-icon">🌀</div>
+        <h2 class="weather-desc" id="weather-desc">SELECT A WEATHER</h2>
+        <p class="location" id="location">WAITING FOR INPUT...</p>
+      </div>
+
+      <div class="spotify-player">
+        <div id="spotify-embed"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dynamic background particles -->
+  <div class="particles" id="particles"></div>
+
+  <script>
+    // Weather data and playlists
+    const weatherData = {
+      sunny: {
+        icon: "☀️",
+        desc: "NEON SUNRISE",
+        location: "CYBER CITY • 28°C",
+        playlist: "37i9dQZF1DXdPec7aLTmlC", // Happy Hits
+        color: "#ffcc00",
+        particles: 20
+      },
+      rainy: {
+        icon: "🌧️",
+        desc: "DIGITAL RAIN",
+        location: "NEON DISTRICT • 18°C",
+        playlist: "37i9dQZF1DX8mnKNFIkghB", // Chill Lofi
+        color: "#66b3ff",
+        particles: 50
+      },
+      cloudy: {
+        icon: "☁️",
+        desc: "GLITCH CLOUDS",
+        location: "DATA STREETS • 22°C",
+        playlist: "37i9dQZF1DX4UmBeyb3I7n", // Indie Chill
+        color: "#aaaaaa",
+        particles: 30
+      },
+      snowy: {
+        icon: "❄️",
+        desc: "FROZEN MATRIX",
+        location: "ICE SECTOR • -5°C",
+        playlist: "37i9dQZF1DX4WYpdgoIcn6", // Ambient
+        color: "#ffffff",
+        particles: 40
+      }
+    };
+
+    // Set weather function
+    function setWeather(type) {
+      const weather = weatherData[type];
+      
+      // Update UI
+      document.getElementById("weather-icon").textContent = weather.icon;
+      document.getElementById("weather-desc").textContent = weather.desc;
+      document.getElementById("location").textContent = weather.location;
+      document.getElementById("weather-icon").style.color = weather.color;
+      
+      // Update timeline
+      document.querySelectorAll('.timeline-node').forEach(node => {
+        node.classList.remove('active');
+      });
+      document.querySelector(`.timeline-node[data-weather="${type.toUpperCase()}"]`).classList.add('active');
+      
+      // Update Spotify embed
+      document.getElementById("spotify-embed").innerHTML = `
+        <iframe 
+          src="https://open.spotify.com/embed/playlist/${weather.playlist}" 
+          width="100%" 
+          height="380" 
+          frameborder="0" 
+          allowtransparency="true" 
+          allow="encrypted-media">
+        </iframe>
+      `;
+      
+      // Create particles
+      createParticles(weather.particles, weather.color);
+    }
+
+    // Create dynamic particles
+    function createParticles(count, color) {
+      const particlesDiv = document.getElementById("particles");
+      particlesDiv.innerHTML = '';
+      
+      for (let i = 0; i < count; i++) {
+        const particle = document.createElement("div");
+        particle.className = "particle";
+        particle.style.width = `${Math.random() * 6 + 2}px`;
+        particle.style.height = particle.style.width;
+        particle.style.left = `${Math.random() * 100}%`;
+        particle.style.top = `${Math.random() * 100}%`;
+        particle.style.background = color;
+        particle.style.opacity = Math.random() * 0.6 + 0.2;
+        
+        // Animation
+        const duration = Math.random() * 20 + 10;
+        const delay = Math.random() * 5;
+        particle.style.animation = `float ${duration}s linear ${delay}s infinite`;
+        
+        particlesDiv.appendChild(particle);
+      }
+    }
+
+    // Floating animation
+    const style = document.createElement('style');
+    style.innerHTML = `
+      @keyframes float {
+        0% {
+          transform: translateY(0) translateX(0);
+          opacity: ${Math.random() * 0.6 + 0.2};
+        }
+        50% {
+          transform: translateY(-100px) translateX(${Math.random() > 0.5 ? '-' : ''}50px);
+          opacity: ${Math.random() * 0.3 + 0.1};
+        }
+        100% {
+          transform: translateY(-200px) translateX(0);
+          opacity: 0;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+
+    // Hide loading screen
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        document.getElementById('loading-screen').style.opacity = '0';
+        setTimeout(() => {
+          document.getElementById('loading-screen').style.display = 'none';
+          setWeather('sunny');
+        }, 1000);
+      }, 3000);
+    });
+  </script>
+</body>
+</html>
