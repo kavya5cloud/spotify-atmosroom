@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Spotify AtmosRoom</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
   <style>
     /* Cyberpunk purple base */
     :root {
@@ -18,12 +19,12 @@
       margin: 0;
       padding: 0;
       box-sizing: border-box;
-      font-family: 'Courier New', monospace;
+      font-family: 'Share Tech Mono', monospace;
     }
 
     body {
       min-height: 100vh;
-      background: var(--purple-dark);
+      background-color: var(--purple-dark);
       color: white;
       overflow-x: hidden;
       position: relative;
@@ -86,7 +87,13 @@
       margin-bottom: 1rem;
       color: var(--purple-neon);
       text-shadow: 0 0 10px var(--purple-neon);
-      letter-spacing: 2px;
+      letter-spacing: 3px;
+      animation: glow-pulse 2s infinite alternate;
+    }
+
+    @keyframes glow-pulse {
+      0% { text-shadow: 0 0 10px var(--purple-neon); }
+      100% { text-shadow: 0 0 20px var(--purple-neon), 0 0 30px var(--purple-light); }
     }
 
     p.subtitle {
@@ -142,6 +149,7 @@
       justify-content: center;
       gap: 1.5rem;
       margin: 2rem 0;
+      flex-wrap: wrap;
     }
 
     .weather-btn {
@@ -220,6 +228,12 @@
       font-size: 4rem;
       margin-bottom: 1rem;
       text-shadow: 0 0 20px currentColor;
+      animation: pulse 2s infinite alternate;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      100% { transform: scale(1.1); }
     }
 
     .weather-desc {
@@ -243,6 +257,7 @@
       border: 1px solid var(--purple-neon);
       box-shadow: 0 0 20px rgba(204, 0, 255, 0.5);
       width: 100%;
+      min-height: 380px;
     }
 
     /* Dynamic background particles */
@@ -261,6 +276,22 @@
       background: var(--purple-neon);
       border-radius: 50%;
       opacity: 0.6;
+      animation: float linear infinite;
+    }
+
+    @keyframes float {
+      0% {
+        transform: translateY(0) translateX(0);
+        opacity: 0.2;
+      }
+      50% {
+        transform: translateY(-100px) translateX(50px);
+        opacity: 0.8;
+      }
+      100% {
+        transform: translateY(-200px) translateX(0);
+        opacity: 0;
+      }
     }
 
     /* Loading animation */
@@ -311,21 +342,111 @@
       100% { width: 100%; }
     }
 
+    /* Weather wizard */
+    .wizard {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+      height: 80px;
+      z-index: 10;
+      animation: float-wizard 2s infinite ease-in-out;
+    }
+
+    .wizard-body {
+      position: absolute;
+      width: 48px;
+      height: 64px;
+      background: var(--wizard-color, var(--purple-neon));
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 0;
+    }
+
+    .wizard-head {
+      position: absolute;
+      width: 32px;
+      height: 32px;
+      background: var(--purple-light);
+      border-radius: 50%;
+      left: 50%;
+      transform: translateX(-50%);
+      top: 0;
+    }
+
+    @keyframes float-wizard {
+      0% { transform: translate(-50%, 0); }
+      50% { transform: translate(-50%, -10px); }
+      100% { transform: translate(-50%, 0); }
+    }
+
+    /* Auth prompt */
+    .auth-prompt {
+      text-align: center;
+      padding: 2rem;
+      background: rgba(77, 0, 153, 0.3);
+      border: 1px solid var(--purple-neon);
+      border-radius: 8px;
+    }
+
+    .auth-btn {
+      padding: 0.75rem 1.5rem;
+      background: var(--purple-neon);
+      color: var(--purple-dark);
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-top: 1rem;
+    }
+
+    .auth-btn:hover {
+      background: var(--purple-light);
+    }
+
+    /* Location input */
+    .location-input {
+      display: flex;
+      justify-content: center;
+      margin: 1rem 0;
+    }
+
+    .location-input input {
+      padding: 0.8rem;
+      background: rgba(26, 0, 51, 0.7);
+      border: 1px solid var(--purple-neon);
+      color: white;
+      font-family: 'Share Tech Mono', monospace;
+      width: 300px;
+      max-width: 100%;
+    }
+
+    .location-input button {
+      padding: 0.8rem 1.5rem;
+      background: var(--purple-mid);
+      border: 1px solid var(--purple-neon);
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .location-input button:hover {
+      background: var(--purple-neon);
+    }
+
     /* Responsive */
     @media (max-width: 768px) {
-      h1 {
-        font-size: 2rem;
-      }
-      .weather-btn {
-        padding: 0.8rem 1.2rem;
-      }
+      h1 { font-size: 2rem; }
+      .weather-btn { padding: 0.8rem 1.2rem; }
+      .atmos-room { padding: 1rem; }
     }
   </style>
 </head>
 <body>
   <!-- Loading screen -->
   <div class="loading-screen" id="loading-screen">
-    <div style="font-size: 3rem; color: var(--purple-neon);">🌀</div>
+    <div style="font-size: 3rem; color: var(--purple-neon); animation: spin 2s linear infinite;">🌀</div>
     <div class="loading-text">INITIALIZING ATMOSROOM...</div>
     <div class="loading-bar">
       <div class="loading-progress"></div>
@@ -338,12 +459,10 @@
       <p class="subtitle">SYNCING WEATHER WITH SOUND</p>
     </header>
 
-    <!-- Story timeline -->
-    <div class="story-timeline">
-      <div class="timeline-node active" data-weather="SUNNY" onclick="setWeather('sunny')"></div>
-      <div class="timeline-node" data-weather="RAINY" onclick="setWeather('rainy')"></div>
-      <div class="timeline-node" data-weather="CLOUDY" onclick="setWeather('cloudy')"></div>
-      <div class="timeline-node" data-weather="SNOWY" onclick="setWeather('snowy')"></div>
+    <!-- Location input -->
+    <div class="location-input">
+      <input type="text" id="city-input" placeholder="Enter city name or zip code">
+      <button onclick="fetchWeatherByCity()">GET WEATHER</button>
     </div>
 
     <!-- Weather selector -->
@@ -360,6 +479,17 @@
       <button class="weather-btn" onclick="setWeather('snowy')">
         <span>❄️</span> SNOWY
       </button>
+      <button class="weather-btn" onclick="fetchCurrentLocationWeather()">
+        <span>📍</span> USE MY LOCATION
+      </button>
+    </div>
+
+    <!-- Story timeline -->
+    <div class="story-timeline">
+      <div class="timeline-node active" data-weather="SUNNY" onclick="setWeather('sunny')"></div>
+      <div class="timeline-node" data-weather="RAINY" onclick="setWeather('rainy')"></div>
+      <div class="timeline-node" data-weather="CLOUDY" onclick="setWeather('cloudy')"></div>
+      <div class="timeline-node" data-weather="SNOWY" onclick="setWeather('snowy')"></div>
     </div>
 
     <!-- AtmosRoom display -->
@@ -367,13 +497,19 @@
       <div class="weather-display">
         <div class="weather-icon" id="weather-icon">🌀</div>
         <h2 class="weather-desc" id="weather-desc">SELECT A WEATHER</h2>
-        <p class="location" id="location">WAITING FOR INPUT...</p>
+        <p class="location" id="location">ENTER LOCATION OR USE YOUR CURRENT POSITION</p>
       </div>
 
       <div class="spotify-player">
         <div id="spotify-embed"></div>
       </div>
     </div>
+  </div>
+
+  <!-- Weather wizard -->
+  <div class="wizard" id="wizard">
+    <div class="wizard-head"></div>
+    <div class="wizard-body"></div>
   </div>
 
   <!-- Dynamic background particles -->
@@ -384,47 +520,92 @@
     const weatherData = {
       sunny: {
         icon: "☀️",
-        desc: "NEON SUNRISE",
-        location: "CYBER CITY • 28°C",
+        desc: "NEON SUNRISE MODE",
         playlist: "37i9dQZF1DXdPec7aLTmlC", // Happy Hits
         color: "#ffcc00",
-        particles: 20
+        particles: 20,
+        sound: [523, 659, 784], // C5, E5, G5 (major chord)
+        wizardColor: "#ffcc00"
       },
       rainy: {
         icon: "🌧️",
-        desc: "DIGITAL RAIN",
-        location: "NEON DISTRICT • 18°C",
+        desc: "DIGITAL RAIN MODE",
         playlist: "37i9dQZF1DX8mnKNFIkghB", // Chill Lofi
         color: "#66b3ff",
-        particles: 50
+        particles: 50,
+        sound: [440, 523, 659], // A4, C5, E5 (minor chord)
+        wizardColor: "#66b3ff"
       },
       cloudy: {
         icon: "☁️",
-        desc: "GLITCH CLOUDS",
-        location: "DATA STREETS • 22°C",
+        desc: "GLITCH CLOUD MODE",
         playlist: "37i9dQZF1DX4UmBeyb3I7n", // Indie Chill
         color: "#aaaaaa",
-        particles: 30
+        particles: 30,
+        sound: [349, 440, 523], // F4, A4, C5 (mysterious)
+        wizardColor: "#aaaaaa"
       },
       snowy: {
         icon: "❄️",
-        desc: "FROZEN MATRIX",
-        location: "ICE SECTOR • -5°C",
+        desc: "FROZEN MATRIX MODE",
         playlist: "37i9dQZF1DX4WYpdgoIcn6", // Ambient
         color: "#ffffff",
-        particles: 40
+        particles: 40,
+        sound: [329, 392, 523], // E4, G4, C5 (suspended)
+        wizardColor: "#ffffff"
       }
     };
 
+    // App state
+    let currentWeather = 'sunny';
+    let spotifyToken = null;
+    let isLoading = true;
+    let currentLocation = '';
+
+    // DOM elements
+    const loadingScreen = document.getElementById('loading-screen');
+    const weatherIcon = document.getElementById('weather-icon');
+    const weatherDesc = document.getElementById('weather-desc');
+    const locationDisplay = document.getElementById('location');
+    const spotifyEmbed = document.getElementById('spotify-embed');
+    const particlesContainer = document.getElementById('particles');
+    const wizard = document.getElementById('wizard');
+    const cityInput = document.getElementById('city-input');
+
+    // Initialize the app
+    function init() {
+      // Hide loading screen after 3 seconds
+      setTimeout(() => {
+        loadingScreen.style.opacity = '0';
+        setTimeout(() => {
+          loadingScreen.style.display = 'none';
+          isLoading = false;
+        }, 1000);
+      }, 3000);
+
+      // Check for Spotify token in URL hash
+      checkSpotifyAuth();
+      
+      // Set initial weather
+      setWeather(currentWeather);
+      
+      // Try to get user's location
+      fetchCurrentLocationWeather();
+    }
+
     // Set weather function
     function setWeather(type) {
+      currentWeather = type;
       const weather = weatherData[type];
       
       // Update UI
-      document.getElementById("weather-icon").textContent = weather.icon;
-      document.getElementById("weather-desc").textContent = weather.desc;
-      document.getElementById("location").textContent = weather.location;
-      document.getElementById("weather-icon").style.color = weather.color;
+      weatherIcon.textContent = weather.icon;
+      weatherDesc.textContent = weather.desc;
+      weatherIcon.style.color = weather.color;
+      
+      // Update wizard color
+      const wizardBody = wizard.querySelector('.wizard-body');
+      wizardBody.style.background = weather.wizardColor;
       
       // Update timeline
       document.querySelectorAll('.timeline-node').forEach(node => {
@@ -432,26 +613,97 @@
       });
       document.querySelector(`.timeline-node[data-weather="${type.toUpperCase()}"]`).classList.add('active');
       
-      // Update Spotify embed
-      document.getElementById("spotify-embed").innerHTML = `
-        <iframe 
-          src="https://open.spotify.com/embed/playlist/${weather.playlist}" 
-          width="100%" 
-          height="380" 
-          frameborder="0" 
-          allowtransparency="true" 
-          allow="encrypted-media">
-        </iframe>
-      `;
+      // Update Spotify embed if authenticated
+      updateSpotifyEmbed(weather.playlist);
       
       // Create particles
       createParticles(weather.particles, weather.color);
+      
+      // Play sound
+      playSound(weather.sound);
+    }
+async function getSpotifyToken() {
+  const response = await fetch("http://localhost:3000/api/spotify/token", {
+    method: "POST",
+  });
+  const data = await response.json();
+  console.log("Spotify Token:", data.access_token);
+}
+
+    // Update Spotify embed
+    function updateSpotifyEmbed(playlistId) {
+      if (spotifyToken) {
+        spotifyEmbed.innerHTML = `
+          <iframe 
+            src="https://open.spotify.com/embed/playlist/${playlistId}?utm_source=generator" 
+            width="100%" 
+            height="380" 
+            frameborder="0" 
+            allowfullscreen="" 
+            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
+            loading="lazy">
+          </iframe>
+        `;
+      } else {
+        showSpotifyAuthPrompt();
+      }
+    }
+
+    // Show Spotify auth prompt
+    function showSpotifyAuthPrompt() {
+      spotifyEmbed.innerHTML = `
+        <div class="auth-prompt">
+          <p>Connect Spotify for full experience</p>
+          <button class="auth-btn" onclick="authenticateSpotify()">LOGIN WITH SPOTIFY</button>
+        </div>
+      `;
+    }
+
+    // Spotify authentication
+    function authenticateSpotify() {
+      const clientId = 'f425cb1c5ce14feca240d89064725b26'; // Replace with your actual client ID
+      const redirectUri = encodeURIComponent(window.location.origin);
+      const scope = 'playlist-read-private';
+      const authUrl = `https://accounts.spotify.com/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}&response_type=token`;
+      window.location.href = authUrl;
+    }
+
+    // Check for Spotify auth token
+    function checkSpotifyAuth() {
+      const hash = window.location.hash;
+      if (hash) {
+        const token = hash.substring(1).split('&')[0].split('=')[1];
+        spotifyToken = token;
+        window.location.hash = '';
+        localStorage.setItem('spotifyToken', token);
+        updateSpotifyEmbed(weatherData[currentWeather].playlist);
+      } else {
+        const storedToken = localStorage.getItem('spotifyToken');
+        if (storedToken) {
+          spotifyToken = storedToken;
+          updateSpotifyEmbed(weatherData[currentWeather].playlist);
+        } else {
+          showSpotifyAuthPrompt();
+        }
+      }
+    }
+
+    // Play 8-bit sound
+    function playSound(frequencies) {
+      const context = new AudioContext();
+      frequencies.forEach((freq, i) => {
+        const osc = context.createOscillator();
+        osc.type = "square";
+        osc.frequency.value = freq;
+        osc.connect(context.destination);
+        osc.start();
+        osc.stop(context.currentTime + 0.1 + (i * 0.05));
+      });
     }
 
     // Create dynamic particles
     function createParticles(count, color) {
-      const particlesDiv = document.getElementById("particles");
-      particlesDiv.innerHTML = '';
+      particlesContainer.innerHTML = '';
       
       for (let i = 0; i < count; i++) {
         const particle = document.createElement("div");
@@ -468,40 +720,113 @@
         const delay = Math.random() * 5;
         particle.style.animation = `float ${duration}s linear ${delay}s infinite`;
         
-        particlesDiv.appendChild(particle);
+        particlesContainer.appendChild(particle);
       }
     }
 
-    // Floating animation
-    const style = document.createElement('style');
-    style.innerHTML = `
-      @keyframes float {
-        0% {
-          transform: translateY(0) translateX(0);
-          opacity: ${Math.random() * 0.6 + 0.2};
-        }
-        50% {
-          transform: translateY(-100px) translateX(${Math.random() > 0.5 ? '-' : ''}50px);
-          opacity: ${Math.random() * 0.3 + 0.1};
-        }
-        100% {
-          transform: translateY(-200px) translateX(0);
-          opacity: 0;
-        }
+    // Fetch weather by current location
+    async function fetchCurrentLocationWeather() {
+      if (!navigator.geolocation) {
+        locationDisplay.textContent = 'Geolocation not supported';
+        return;
       }
-    `;
-    document.head.appendChild(style);
 
-    // Hide loading screen
-    window.addEventListener('load', () => {
-      setTimeout(() => {
-        document.getElementById('loading-screen').style.opacity = '0';
-        setTimeout(() => {
-          document.getElementById('loading-screen').style.display = 'none';
-          setWeather('sunny');
-        }, 1000);
-      }, 3000);
+      try {
+        const position = await new Promise((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject);
+        });
+        
+        const weather = await fetchWeather(
+          position.coords.latitude,
+          position.coords.longitude
+        );
+        locationDisplay.textContent = `${weather.name}, ${weather.sys.country} • ${Math.round(weather.main.temp)}°C`;
+        
+        // Set appropriate weather type
+        if (weather.weather[0].main.includes('rain')) setWeather('rainy');
+        else if (weather.weather[0].main.includes('snow')) setWeather('snowy');
+        else if (weather.weather[0].main.includes('cloud')) setWeather('cloudy');
+        else setWeather('sunny');
+      } catch (error) {
+        console.error('Error getting location:', error);
+        locationDisplay.textContent = 'Could not get location. Using default.';
+      }
+    }
+
+    // Fetch weather by city name
+    async function fetchWeatherByCity() {
+      const city = cityInput.value.trim();
+      if (!city) {
+        alert('Please enter a city name');
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(city)}&appid=352717941c7cb798160c0dc437a534cd&units=metric`
+        );
+        
+        if (!response.ok) {
+          throw new Error('City not found');
+        }
+        
+        const weather = await response.json();
+        locationDisplay.textContent = `${weather.name}, ${weather.sys.country} • ${Math.round(weather.main.temp)}°C`;
+        
+        // Set appropriate weather type
+        if (weather.weather[0].main.includes('rain')) setWeather('rainy');
+        else if (weather.weather[0].main.includes('snow')) setWeather('snowy');
+        else if (weather.weather[0].main.includes('cloud')) setWeather('cloudy');
+        else setWeather('sunny');
+      } catch (error) {
+        console.error('Error fetching weather:', error);
+        alert('Could not find weather for that location');
+      }
+    }
+
+    // Helper function to fetch weather
+    async function fetchWeather(lat, lon) {
+      const response = await fetch(
+        `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=352717941c7cb798160c0dc437a534cd&units=metric`
+      );
+      return await response.json();
+    }
+
+    // Keyboard controls
+    document.addEventListener('keydown', (e) => {
+      if (isLoading) return;
+      
+      const weatherTypes = ['sunny', 'rainy', 'cloudy', 'snowy'];
+      const currentIndex = weatherTypes.indexOf(currentWeather);
+      
+      switch (e.key) {
+        case 'ArrowLeft':
+          wizard.style.left = `${parseInt(wizard.style.left || '50%') - 30}px`;
+          break;
+        case 'ArrowRight':
+          wizard.style.left = `${parseInt(wizard.style.left || '50%') + 30}px`;
+          break;
+        case 'ArrowUp':
+          const nextIndex = (currentIndex + 1) % weatherTypes.length;
+          setWeather(weatherTypes[nextIndex]);
+          playSound([262, 330, 392]); // C4, E4, G4
+          break;
+        case 'ArrowDown':
+          const prevIndex = (currentIndex - 1 + weatherTypes.length) % weatherTypes.length;
+          setWeather(weatherTypes[prevIndex]);
+          playSound([392, 330, 262]); // G4, E4, C4
+          break;
+      }
     });
+
+    // Make functions available globally
+    window.setWeather = setWeather;
+    window.fetchCurrentLocationWeather = fetchCurrentLocationWeather;
+    window.fetchWeatherByCity = fetchWeatherByCity;
+    window.authenticateSpotify = authenticateSpotify;
+
+    // Initialize the app
+    init();
   </script>
 </body>
 </html>
